@@ -1,4 +1,7 @@
 import express from 'express';
+import getDB from './db';
+
+getDB().then((db) => console.log(db));
 
 const app = express();
 app.get('/', (request, response) => {
