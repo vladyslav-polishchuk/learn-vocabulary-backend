@@ -1,11 +1,12 @@
 import express from 'express';
 import getDB from './db';
 
-getDB().then((db) => console.log(db));
+(async function () {
+  const dataAccessLayer = await getDB();
 
-const app = express();
-app.get('/', (request, response) => {
-  const html = `
+  const app = express();
+  app.get('/', (request, response) => {
+    const html = `
     <!DOCTYPE html>
       <html lang = 'en'>
         <head>
@@ -15,7 +16,8 @@ app.get('/', (request, response) => {
         </body>
       </html>
 	`;
-  response.send(html);
-});
+    response.send(html);
+  });
 
-app.listen(8080);
+  app.listen(8080);
+})();
