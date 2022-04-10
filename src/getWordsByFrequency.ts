@@ -2,7 +2,7 @@ import type { UploadedFile } from 'express-fileupload';
 
 interface Word {
   value: string;
-  frequency: number;
+  count: number;
 }
 
 const alphabeth = new Set([
@@ -83,6 +83,6 @@ export default function getWordsByFrequency(file: UploadedFile): Word[] {
 
   return result.map((value) => ({
     value,
-    frequency: wordsByFrequencyMap.get(value) ?? 1,
+    count: wordsByFrequencyMap.get(value) ?? 1,
   }));
 }

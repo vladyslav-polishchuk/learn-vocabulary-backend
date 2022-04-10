@@ -6,9 +6,8 @@ const tables = [
 		name TEXT
 	);`,
   `CREATE TABLE IF NOT EXISTS words (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		text TEXT,
-		frequency INTEGER
+		value TEXT PRIMARY KEY,
+		count INTEGER
 	);`,
   `CREATE TABLE IF NOT EXISTS books (
 		hash TEXT PRIMARY KEY,
