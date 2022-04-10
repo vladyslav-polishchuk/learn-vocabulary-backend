@@ -10,7 +10,7 @@ const tables = [
 		text TEXT,
 		frequency INTEGER
 	);`,
-  `CREATE TABLE IF NOT EXISTS processed_books (
+  `CREATE TABLE IF NOT EXISTS books (
 		hash TEXT PRIMARY KEY,
 		name TEXT,
 		share BOOLEAN,
@@ -29,8 +29,7 @@ export default async function createSchema(db: Database) {
       new Promise((resolve, reject) => {
         db.run(createTableSql, [], (err) => {
           if (err) {
-            console.log('Error running setup sql');
-            console.log(err);
+            console.log('Error running setup sql', err);
             reject(err);
           } else {
             resolve(true);

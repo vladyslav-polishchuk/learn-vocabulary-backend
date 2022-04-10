@@ -1,23 +1,17 @@
 import express from 'express';
+import cors from 'cors';
+import fileupload from 'express-fileupload';
 import getDB from './db';
+import attachEndpoints from './endpoints';
 
 (async function () {
   const dataAccessLayer = await getDB();
 
   const app = express();
-  app.get('/', (request, response) => {
-    const html = `
-    <!DOCTYPE html>
-      <html lang = 'en'>
-        <head>
-          <title>Test!</title>
-        </head>
-        <body>posts.map (function (post) {return " <li>" + post.title + "</li>";}). join ("")
-        </body>
-      </html>
-	`;
-    response.send(html);
-  });
+  app.use(cors());
+  app.use(fileupload());
+
+  attachEndpoints(app, dataAccessLayer);
 
   app.listen(8080);
 })();
