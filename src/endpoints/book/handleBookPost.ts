@@ -24,20 +24,23 @@ export default async function handleBookPost(
     });
 
     const wordsFromDb = await dataAccessLayer.read('words');
-    const wordsByFrequencyMap = new Map();
+    const wordKeyByValue = new Map();
     wordsFromDb.forEach((word) => {
-      wordsByFrequencyMap.set(word.value, word.count);
+      wordKeyByValue.set(word.value, word);
     });
 
     const promises = words.map(async (word) => {
-      const countFromDb = wordsByFrequencyMap.get(word.value) ?? 0;
-      const count = countFromDb + word.count;
+      const wordFromDb = wordKeyByValue.get(word.value);
+      const count = (wordFromDb?.count ?? 0) + word.count;
       const updatedWord = { ...word, count };
 
-      if (countFromDb === 0) {
-        await dataAccessLayer.create('words', updatedWord);
+      if (wordFromDb) {
+        await dataAccessLayer.update('words', {
+          ...updatedWord,
+          id: wordFromDb.id,
+        });
       } else {
-        await dataAccessLayer.update('words', updatedWord);
+        await dataAccessLayer.create('words', updatedWord);
       }
     });
 

@@ -66,16 +66,20 @@ export default class DataAccessLayer {
     properties: Record<string, string | number | boolean>
   ): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const values = Object.entries(properties).map(([propName, propValue]) => {
-        return `${propName} = ${
-          typeof propValue === 'string' ? `"${propValue}"` : propValue
-        }`;
-      });
-      const sql = `UPDATE ${tableName} SET ${values.join(
-        ','
-      )} WHERE ${values.join(' AND ')}`;
+      const values = Object.entries(properties)
+        .filter(([propName]) => propName !== 'id')
+        .map(([propName, propValue]) => {
+          return `${propName} = ${
+            typeof propValue === 'string' ? `"${propValue}"` : propValue
+          }`;
+        });
+      const sql = `UPDATE ${tableName} SET ${values.join(',')} WHERE id = ${
+        properties.id
+      }`;
 
-      this.db.run(sql, [], (err) => {
+      console.log(sql);
+
+      this.db.run(sql, [properties.id], (err) => {
         if (err) {
           console.log(`Error updating data in ${tableName}`, err, sql);
           reject(err);

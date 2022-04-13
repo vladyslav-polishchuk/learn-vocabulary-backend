@@ -6,11 +6,13 @@ const tables = [
 		name TEXT
 	);`,
   `CREATE TABLE IF NOT EXISTS words (
-		value TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+		value TEXT,
 		count INTEGER
 	);`,
   `CREATE TABLE IF NOT EXISTS books (
-		hash TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+		hash TEXT,
 		name TEXT,
 		share BOOLEAN,
 		user INTEGER
