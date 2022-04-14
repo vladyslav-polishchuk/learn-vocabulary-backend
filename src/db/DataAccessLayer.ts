@@ -77,9 +77,7 @@ export default class DataAccessLayer {
         properties.id
       }`;
 
-      console.log(sql);
-
-      this.db.run(sql, [properties.id], (err) => {
+      this.db.run(sql, [], (err) => {
         if (err) {
           console.log(`Error updating data in ${tableName}`, err, sql);
           reject(err);
