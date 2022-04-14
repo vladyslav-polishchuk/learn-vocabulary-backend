@@ -1,5 +1,9 @@
 import { Database } from 'sqlite3';
 
+export interface DbRecord extends Record<string, string | number | boolean> {
+  id?: number;
+}
+
 export default class DataAccessLayer {
   declare db: Database;
 
@@ -7,52 +11,15 @@ export default class DataAccessLayer {
     this.db = db;
   }
 
-  async create(
-    tableName: string,
-    properties: Record<string, string | number | boolean>
-  ): Promise<boolean> {
+  async #run<T>(
+    sql: string,
+    params: unknown[] = [],
+    command: 'run' | 'all' = 'run'
+  ): Promise<T> {
     return new Promise((resolve, reject) => {
-      const propNames = Object.keys(properties);
-      const propValues = Object.values(properties);
-      const sql = `INSERT INTO ${tableName}(${propNames.join(
-        ','
-      )}) VALUES (${propNames.map(() => '?').join(',')})`;
-      this.db.run(sql, propValues, (err) => {
+      this.db[command](sql, params, (err: Error, result: T) => {
         if (err) {
-          console.log(
-            `Error creating data in ${tableName}`,
-            err,
-            sql,
-            propValues
-          );
-          reject(err);
-        } else {
-          resolve(true);
-        }
-      });
-    });
-  }
-
-  async read(
-    tableName: string,
-    filterProperties: Record<string, string | number | boolean> = {}
-  ): Promise<Record<string, string | boolean | number>[]> {
-    return new Promise((resolve, reject) => {
-      const criteriaList = Object.entries(filterProperties)
-        .map(([criteriaName, criteriaValue]) => {
-          const typedCriteriaValue =
-            typeof criteriaValue === 'string'
-              ? `"${criteriaValue}"`
-              : criteriaValue;
-
-          return `${criteriaName} = ${typedCriteriaValue}`;
-        })
-        .join(' AND ');
-      const filterCriteria = criteriaList ? `WHERE ${criteriaList}` : '';
-      const sql = `SELECT * from ${tableName} ${filterCriteria}`;
-      this.db.all(sql, [], (err, result) => {
-        if (err) {
-          console.log(`Error fetchng data from ${tableName}`, err, sql);
+          console.log(err, sql, params, command);
           reject(err);
         } else {
           resolve(result);
@@ -61,31 +28,69 @@ export default class DataAccessLayer {
     });
   }
 
-  async update(
+  async create(
     tableName: string,
-    properties: Record<string, string | number | boolean>
-  ): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const values = Object.entries(properties)
-        .filter(([propName]) => propName !== 'id')
-        .map(([propName, propValue]) => {
-          return `${propName} = ${
-            typeof propValue === 'string' ? `"${propValue}"` : propValue
-          }`;
-        });
-      const sql = `UPDATE ${tableName} SET ${values.join(',')} WHERE id = ${
-        properties.id
-      }`;
+    items: DbRecord | DbRecord[]
+  ): Promise<unknown> {
+    const rowsToInsert = Array.isArray(items) ? items : [items];
+    const chunks = [];
+    const chunkSize = 50;
+    for (let i = 0; i < rowsToInsert.length; i += chunkSize) {
+      chunks.push(rowsToInsert.slice(i, i + chunkSize));
+    }
+    const promises = chunks.map((rows) => {
+      let params: unknown[] = [];
+      const propNames = Object.keys(rows[0]);
+      const propValues = rows
+        .map((properties) => {
+          params = params.concat(...Object.values(properties));
 
-      this.db.run(sql, [], (err) => {
-        if (err) {
-          console.log(`Error updating data in ${tableName}`, err, sql);
-          reject(err);
-        } else {
-          resolve(true);
-        }
-      });
+          return `(${propNames.map(() => '?').join(',')})`;
+        })
+        .join(',');
+      const sql = `INSERT INTO ${tableName}(${propNames.join(
+        ','
+      )}) VALUES ${propValues}`;
+
+      return this.#run(sql, params);
     });
+
+    return Promise.all(promises as Promise<boolean>[]);
+  }
+
+  async read(
+    tableName: string,
+    filterProperties: DbRecord = {}
+  ): Promise<Record<string, string | boolean | number>[]> {
+    const criteriaList = Object.entries(filterProperties)
+      .map(([criteriaName, criteriaValue]) => {
+        const typedCriteriaValue =
+          typeof criteriaValue === 'string'
+            ? `"${criteriaValue}"`
+            : criteriaValue;
+
+        return `${criteriaName} = ${typedCriteriaValue}`;
+      })
+      .join(' AND ');
+    const filterCriteria = criteriaList ? `WHERE ${criteriaList}` : '';
+    const sql = `SELECT * from ${tableName} ${filterCriteria}`;
+
+    return this.#run(sql, [], 'all');
+  }
+
+  async update(tableName: string, properties: DbRecord): Promise<boolean> {
+    const values = Object.entries(properties)
+      .filter(([propName]) => propName !== 'id')
+      .map(([propName, propValue]) => {
+        return `${propName} = ${
+          typeof propValue === 'string' ? `"${propValue}"` : propValue
+        }`;
+      });
+    const sql = `UPDATE ${tableName} SET ${values.join(',')} WHERE id = ${
+      properties.id
+    }`;
+
+    return this.#run(sql);
   }
 
   async delete() {}
