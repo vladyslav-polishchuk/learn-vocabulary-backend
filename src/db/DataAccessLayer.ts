@@ -4,11 +4,75 @@ export interface DbRecord extends Record<string, string | number | boolean> {
   id?: number;
 }
 
+const valueByType = (value: string | number | boolean) => {
+  return typeof value === 'string' ? `"${value}"` : value;
+};
+
 export default class DataAccessLayer {
   declare db: Database;
 
   constructor(db: Database) {
     this.db = db;
+  }
+
+  async create(tableName: string, item: DbRecord): Promise<unknown> {
+    const values = Object.values(item);
+    const propNames = Object.keys(item).join(',');
+    const valuesTemplate = Array(values.length).fill('?').join(',');
+    const sql = `INSERT INTO ${tableName}(${propNames}) VALUES (${valuesTemplate})`;
+
+    return this.#run(sql, values);
+  }
+
+  async read(
+    tableName: string,
+    filterProperties: DbRecord = {}
+  ): Promise<Record<string, string | boolean | number>[]> {
+    const criteriaList = Object.entries(filterProperties)
+      .map(
+        ([criteriaName, criteriaValue]) =>
+          `${criteriaName} = ${valueByType(criteriaValue)}`
+      )
+      .join(' AND ');
+    const filterCriteria = criteriaList ? `WHERE ${criteriaList}` : '';
+    const sql = `SELECT * from ${tableName} ${filterCriteria}`;
+
+    return this.#run(sql, [], 'all');
+  }
+
+  async update(
+    tableName: string,
+    item: DbRecord,
+    uniqueKey: string = 'id'
+  ): Promise<boolean> {
+    const values = Object.entries(item)
+      .filter(([propName]) => propName !== uniqueKey)
+      .map(
+        ([propName, propValue]) => `${propName} = ${valueByType(propValue)}`
+      );
+    const id = item[uniqueKey];
+    const sql = `UPDATE ${tableName} SET ${values.join(',')} WHERE id = ${id}`;
+
+    return this.#run(sql);
+  }
+
+  async delete(tableName: string) {}
+
+  async transaction(callback: () => Promise<unknown>) {
+    this.db.run('BEGIN TRANSACTION');
+
+    let result = null;
+    try {
+      result = await callback();
+
+      this.db.run('COMMIT');
+    } catch (e) {
+      console.log('Transaction error', e);
+
+      this.db.run('ROLLBACK');
+    }
+
+    return result;
   }
 
   async #run<T>(
@@ -27,71 +91,4 @@ export default class DataAccessLayer {
       });
     });
   }
-
-  async create(
-    tableName: string,
-    items: DbRecord | DbRecord[]
-  ): Promise<unknown> {
-    const rowsToInsert = Array.isArray(items) ? items : [items];
-    const chunks = [];
-    const chunkSize = 50;
-    for (let i = 0; i < rowsToInsert.length; i += chunkSize) {
-      chunks.push(rowsToInsert.slice(i, i + chunkSize));
-    }
-    const promises = chunks.map((rows) => {
-      let params: unknown[] = [];
-      const propNames = Object.keys(rows[0]);
-      const propValues = rows
-        .map((properties) => {
-          params = params.concat(...Object.values(properties));
-
-          return `(${propNames.map(() => '?').join(',')})`;
-        })
-        .join(',');
-      const sql = `INSERT INTO ${tableName}(${propNames.join(
-        ','
-      )}) VALUES ${propValues}`;
-
-      return this.#run(sql, params);
-    });
-
-    return Promise.all(promises as Promise<boolean>[]);
-  }
-
-  async read(
-    tableName: string,
-    filterProperties: DbRecord = {}
-  ): Promise<Record<string, string | boolean | number>[]> {
-    const criteriaList = Object.entries(filterProperties)
-      .map(([criteriaName, criteriaValue]) => {
-        const typedCriteriaValue =
-          typeof criteriaValue === 'string'
-            ? `"${criteriaValue}"`
-            : criteriaValue;
-
-        return `${criteriaName} = ${typedCriteriaValue}`;
-      })
-      .join(' AND ');
-    const filterCriteria = criteriaList ? `WHERE ${criteriaList}` : '';
-    const sql = `SELECT * from ${tableName} ${filterCriteria}`;
-
-    return this.#run(sql, [], 'all');
-  }
-
-  async update(tableName: string, properties: DbRecord): Promise<boolean> {
-    const values = Object.entries(properties)
-      .filter(([propName]) => propName !== 'id')
-      .map(([propName, propValue]) => {
-        return `${propName} = ${
-          typeof propValue === 'string' ? `"${propValue}"` : propValue
-        }`;
-      });
-    const sql = `UPDATE ${tableName} SET ${values.join(',')} WHERE id = ${
-      properties.id
-    }`;
-
-    return this.#run(sql);
-  }
-
-  async delete() {}
 }
