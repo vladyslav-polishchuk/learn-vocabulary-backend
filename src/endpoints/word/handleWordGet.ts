@@ -6,7 +6,7 @@ export default async function handleWordGet(
   response: Response,
   dataAccessLayer: DataAccessLayer
 ) {
-  const books = await dataAccessLayer.read('words');
+  const books = await dataAccessLayer.read('words', {}, { count: 'desc' });
 
   response.send(books);
 }

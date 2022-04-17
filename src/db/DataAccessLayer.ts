@@ -26,7 +26,8 @@ export default class DataAccessLayer {
 
   async read(
     tableName: string,
-    filterProperties: DbRecord = {}
+    filterProperties: DbRecord = {},
+    orderBy: Record<string, 'asc' | 'desc'> = {}
   ): Promise<Record<string, string | boolean | number>[]> {
     const criteriaList = Object.entries(filterProperties)
       .map(
@@ -35,7 +36,15 @@ export default class DataAccessLayer {
       )
       .join(' AND ');
     const filterCriteria = criteriaList ? `WHERE ${criteriaList}` : '';
-    const sql = `SELECT * from ${tableName} ${filterCriteria}`;
+    const orderByProperties = Object.entries(orderBy)
+      .map(([key, value]) => {
+        return `${key} ${value}`;
+      })
+      .join(',');
+    const orderByCriteria = orderByProperties.length
+      ? `ORDER BY ${orderByProperties}`
+      : '';
+    const sql = `SELECT * from ${tableName} ${filterCriteria} ${orderByCriteria}`;
 
     return this.#run(sql, [], 'all');
   }
