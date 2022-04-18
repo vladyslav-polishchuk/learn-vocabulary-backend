@@ -1,5 +1,3 @@
-import type { UploadedFile } from 'express-fileupload';
-
 interface Word {
   value: string;
   count: number;
@@ -46,9 +44,7 @@ const alphabeth = new Set([
   "'",
 ]);
 
-export default function getWordsByFrequency(file: UploadedFile): Word[] {
-  const fileContent = file.data.toString();
-
+export default function getWordsByFrequency(fileContent: string): Word[] {
   if (!fileContent || typeof fileContent !== 'string') return [];
 
   const lowerCaseText = fileContent.toLowerCase();

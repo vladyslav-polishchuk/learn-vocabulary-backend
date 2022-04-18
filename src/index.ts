@@ -9,7 +9,14 @@ import attachEndpoints from './endpoints';
 
   const app = express();
   app.use(cors());
-  app.use(fileupload());
+  app.use(
+    fileupload({
+      limits: {
+        fileSize: 1 * 1024 * 1024 * 1024,
+      },
+    })
+  );
+  app.use(express.static('uploads'));
 
   attachEndpoints(app, dataAccessLayer);
 

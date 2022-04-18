@@ -1,6 +1,7 @@
-import getWordsByFrequency from '../../getWordsByFrequency';
+import fs from 'fs';
 import type { Request, Response } from 'express';
 import type { UploadedFile } from 'express-fileupload';
+import getWordsByFrequency from '../../getWordsByFrequency';
 import type DataAccessLayer from '../../db/DataAccessLayer';
 import type { DbRecord } from '../../db/DataAccessLayer';
 
@@ -9,24 +10,33 @@ export default async function handleBookPost(
   response: Response,
   dataAccessLayer: DataAccessLayer
 ) {
-  const book = request.files.book as UploadedFile;
-  const words = getWordsByFrequency(book);
+  const bookFile = request.files.book as UploadedFile;
+  const fileContent = bookFile.data.toString();
+  const words = getWordsByFrequency(fileContent);
   const bookInDb = await dataAccessLayer.read('books', {
-    hash: book.md5,
+    hash: bookFile.md5,
   });
+  const book = {
+    hash: bookFile.md5,
+    name: bookFile.name,
+    share: false,
+  };
 
   if (bookInDb.length) {
-    response.send(words);
+    response.send({ words, ...book });
     return;
   }
 
-  // Do we need await? Maybe can be executed in background
-  await dataAccessLayer.create('books', {
-    hash: book.md5,
-    name: book.name,
-    share: false,
-    user: null,
+  const fileDirectory = `./uploads/${bookFile.md5}`;
+  fs.mkdir(fileDirectory, { recursive: true }, async (err) => {
+    if (err) {
+      console.log('File was not saved', err);
+    } else {
+      await bookFile.mv(`${fileDirectory}/${bookFile.name}`);
+    }
   });
+
+  await dataAccessLayer.create('books', book);
 
   const then = performance.now();
   const wordsFromDb = await dataAccessLayer.read('words');
@@ -58,5 +68,5 @@ export default async function handleBookPost(
     }
   });
 
-  response.send(words);
+  response.send({ words, ...book });
 }
