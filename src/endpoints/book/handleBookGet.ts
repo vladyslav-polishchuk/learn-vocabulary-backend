@@ -1,7 +1,7 @@
 import fs from 'fs';
 import type DataAccessLayer from '../../db/DataAccessLayer';
 import type { Request, Response } from 'express';
-import getWordsByFrequency from '../../getWordsByFrequency';
+import getWordsSortedByFrequency from '../../logic';
 
 export default async function handleBookGet(
   request: Request,
@@ -21,7 +21,7 @@ export default async function handleBookGet(
         response.send(err);
         return;
       }
-      const words = getWordsByFrequency(data.toString());
+      const words = getWordsSortedByFrequency(data.toString());
 
       response.send({ words, ...book });
     });

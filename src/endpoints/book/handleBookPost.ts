@@ -1,7 +1,7 @@
 import fs from 'fs';
 import type { Request, Response } from 'express';
 import type { UploadedFile } from 'express-fileupload';
-import getWordsByFrequency from '../../getWordsByFrequency';
+import getWordsSortedByFrequency from '../../logic';
 import type DataAccessLayer from '../../db/DataAccessLayer';
 import type { DbRecord } from '../../db/DataAccessLayer';
 
@@ -12,7 +12,7 @@ export default async function handleBookPost(
 ) {
   const bookFile = request.files.book as UploadedFile;
   const fileContent = bookFile.data.toString();
-  const words = getWordsByFrequency(fileContent);
+  const words = getWordsSortedByFrequency(fileContent);
   const bookInDb = await dataAccessLayer.read('books', {
     hash: bookFile.md5,
   });
