@@ -38,15 +38,7 @@ export default async function handleBookPost(
 
   await dataAccessLayer.create('books', book);
 
-  const then = performance.now();
   const wordsFromDb = await dataAccessLayer.read('words');
-  console.log('Fetch time:', performance.now() - then);
-  console.log('Total words:', wordsFromDb.length);
-  console.log(
-    'Words with -ing ending:',
-    wordsFromDb.filter((word) => (word.value as string).endsWith('ing')).length
-  );
-
   const wordKeyByValue = new Map();
   wordsFromDb.forEach((word) => {
     wordKeyByValue.set(word.value, word);
