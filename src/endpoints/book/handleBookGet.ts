@@ -16,13 +16,13 @@ export default async function handleBookGet(
     });
 
     const fileName = `./uploads/${id}/${(book as any)?.name}`;
-    fs.readFile(fileName, (err, data) => {
+    fs.readFile(fileName, async (err, data) => {
       if (err) {
         console.error(err);
         response.send(err);
         return;
       }
-      const words = getWordsSortedByFrequency(data, fileName);
+      const words = await getWordsSortedByFrequency(data, fileName);
 
       response.send({ words, ...book });
     });

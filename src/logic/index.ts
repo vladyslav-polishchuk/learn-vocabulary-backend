@@ -14,11 +14,11 @@ const sort = (wordsByFrequencyMap: Map<string, number>) => {
   );
 };
 
-export default function getWordsSortedByFrequency(
+export default async function getWordsSortedByFrequency(
   fileContent: Buffer,
   fileName: string
-): Word[] {
-  const fileText = getFileText(fileContent, fileName);
+): Promise<Word[]> {
+  const fileText = await getFileText(fileContent, fileName);
 
   if (!fileText || typeof fileText !== 'string') return [];
 

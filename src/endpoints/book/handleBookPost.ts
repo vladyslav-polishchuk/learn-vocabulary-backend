@@ -11,7 +11,7 @@ export default async function handleBookPost(
   dataAccessLayer: DataAccessLayer
 ) {
   const bookFile = request.files.book as UploadedFile;
-  const words = getWordsSortedByFrequency(bookFile.data, bookFile.name);
+  const words = await getWordsSortedByFrequency(bookFile.data, bookFile.name);
   const bookInDb = await dataAccessLayer.read('books', {
     hash: bookFile.md5,
   });
