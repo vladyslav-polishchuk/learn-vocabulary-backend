@@ -1,10 +1,9 @@
 import alphabeth from './alphabeth';
-import irregularVerbs from './irregularVerbs';
 
 export default function getWordsByFrequency(
-  fileContent: string
+  fileText: string
 ): Map<string, number> {
-  const lowerCaseText = fileContent.toLowerCase();
+  const lowerCaseText = fileText.toLowerCase();
   const allWords = [];
   let currentWord = '';
   for (let char of lowerCaseText) {
