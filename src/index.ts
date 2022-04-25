@@ -17,7 +17,6 @@ import attachEndpoints from './endpoints';
       },
     })
   );
-  app.use(express.static('uploads'));
   app.use(
     responseTime((req, res, time) => {
       console.log(req.method, req.url, time + 'ms');

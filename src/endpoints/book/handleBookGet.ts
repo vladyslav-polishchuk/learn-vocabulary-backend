@@ -8,29 +8,34 @@ export default async function handleBookGet(
   response: Response,
   dataAccessLayer: DataAccessLayer
 ) {
-  const { id } = request.query;
+  const { id, download } = request.query;
 
-  if (typeof id === 'string') {
-    const [book] = await dataAccessLayer.read('books', {
-      hash: id,
-    });
-
-    const fileName = `./uploads/${id}/${(book as any)?.name}`;
-    fs.readFile(fileName, async (err, data) => {
-      if (err) {
-        console.error(err);
-        response.send(err);
-        return;
-      }
-      const words = await getWordsSortedByFrequency(data, fileName);
-
-      response.send({ words, ...book });
-    });
-  } else {
+  if (typeof id !== 'string') {
     const books = await dataAccessLayer.read('books', {
       //implement books sharing later
       //shared: true
     });
     response.send(books);
+    return;
   }
+
+  const [book] = await dataAccessLayer.read('books', {
+    hash: id,
+  });
+  const fileName = `./uploads/${id}/${(book as any)?.name}`;
+
+  if (download) {
+    response.download(fileName);
+    return;
+  }
+
+  fs.readFile(fileName, async (err, data) => {
+    if (err) {
+      response.send(err);
+      return;
+    }
+    const words = await getWordsSortedByFrequency(data, fileName);
+
+    response.send({ words, ...book });
+  });
 }
