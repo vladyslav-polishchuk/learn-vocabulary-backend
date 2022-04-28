@@ -1,4 +1,5 @@
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import responseTime from 'response-time';
 import cors from 'cors';
 import fileupload from 'express-fileupload';
@@ -11,7 +12,13 @@ import wordRoute from './routes/word';
   const dataAccessLayer = await getDB();
 
   const app = express();
-  app.use(cors());
+  app.use(
+    cors({
+      origin: 'http://localhost:3000',
+      credentials: true,
+    })
+  );
+  app.use(cookieParser());
   app.use(
     fileupload({
       limits: { fileSize: 1 * 1024 * 1024 * 1024 },

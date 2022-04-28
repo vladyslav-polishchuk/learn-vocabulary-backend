@@ -11,9 +11,7 @@ export const verifyToken = (
   res: Response,
   next: any
 ) => {
-  const token =
-    req.body?.token || req.query?.token || req.headers['x-access-token'];
-
+  const token = req.cookies.access_token;
   if (!token) {
     return res.status(403).send('A token is required for authentication');
   }
@@ -48,9 +46,15 @@ export default function (dataAccessLayer: DataAccessLayer) {
       token,
     });
 
-    delete (user as any)?.password;
+    delete (updatedUser as any)?.password;
 
-    res.status(200).json(updatedUser);
+    res
+      .cookie('access_token', token, {
+        httpOnly: true,
+        // secure: process.env.NODE_ENV === 'production',
+      })
+      .status(200)
+      .json(updatedUser);
   });
 
   router.post('/register', async (req: Request, res: Response) => {
@@ -78,7 +82,13 @@ export default function (dataAccessLayer: DataAccessLayer) {
 
     delete (user as any)?.password;
 
-    res.status(201).json(user);
+    res
+      .cookie('access_token', token, {
+        httpOnly: true,
+        // secure: process.env.NODE_ENV === 'production',
+      })
+      .status(201)
+      .json(user);
   });
 
   return router;
