@@ -3,7 +3,9 @@ import responseTime from 'response-time';
 import cors from 'cors';
 import fileupload from 'express-fileupload';
 import getDB from './db';
-import attachEndpoints from './endpoints';
+import authRoute from './routes/auth';
+import bookRoute from './routes/book';
+import wordRoute from './routes/word';
 
 (async function () {
   const dataAccessLayer = await getDB();
@@ -21,7 +23,9 @@ import attachEndpoints from './endpoints';
     })
   );
 
-  attachEndpoints(app, dataAccessLayer);
+  app.use(authRoute(dataAccessLayer));
+  app.use(bookRoute(dataAccessLayer));
+  app.use(wordRoute(dataAccessLayer));
 
   app.listen(8080);
 })();
