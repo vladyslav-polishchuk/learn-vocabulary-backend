@@ -21,7 +21,10 @@ export default class DataAccessLayer {
     const valuesTemplate = Array(values.length).fill('?').join(',');
     const sql = `INSERT INTO ${tableName}(${propNames}) VALUES (${valuesTemplate})`;
 
-    return this.#run(sql, values);
+    await this.#run(sql, values);
+
+    const [createdRow] = await this.read(tableName, { ...item });
+    return createdRow;
   }
 
   async read(
@@ -53,7 +56,7 @@ export default class DataAccessLayer {
     tableName: string,
     item: DbRecord,
     uniqueKey: string = 'id'
-  ): Promise<boolean> {
+  ): Promise<unknown> {
     const values = Object.entries(item)
       .filter(([propName]) => propName !== uniqueKey)
       .map(
@@ -62,7 +65,10 @@ export default class DataAccessLayer {
     const id = item[uniqueKey];
     const sql = `UPDATE ${tableName} SET ${values.join(',')} WHERE id = ${id}`;
 
-    return this.#run(sql);
+    await this.#run(sql);
+
+    const [updatedRow] = await this.read(tableName, { ...item });
+    return updatedRow;
   }
 
   async delete(tableName: string) {}
