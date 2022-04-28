@@ -1,11 +1,48 @@
 import fs from 'fs';
+import getWordsSortedByFrequency from '../logic';
+import type DataAccessLayer from '../db/DataAccessLayer';
 import type { Request, Response } from 'express';
 import type { UploadedFile } from 'express-fileupload';
-import getWordsSortedByFrequency from '../../logic';
-import type DataAccessLayer from '../../db/DataAccessLayer';
-import type { DbRecord } from '../../db/DataAccessLayer';
+import type { DbRecord } from '../db/DataAccessLayer';
 
-export default async function handleBookPost(
+export const handleBookGet = async function (
+  request: Request,
+  response: Response,
+  dataAccessLayer: DataAccessLayer
+) {
+  const { id, download } = request.query;
+
+  if (typeof id !== 'string') {
+    const books = await dataAccessLayer.read('books', {
+      //implement books sharing later
+      //shared: true
+    });
+    response.send(books);
+    return;
+  }
+
+  const [book] = await dataAccessLayer.read('books', {
+    hash: id,
+  });
+  const fileName = `./uploads/${id}/${(book as any)?.name}`;
+
+  if (download) {
+    response.download(fileName);
+    return;
+  }
+
+  fs.readFile(fileName, async (err, data) => {
+    if (err) {
+      response.send(err);
+      return;
+    }
+    const words = await getWordsSortedByFrequency(data, fileName);
+
+    response.send({ words, ...book });
+  });
+};
+
+export const handleBookPost = async function (
   request: Request,
   response: Response,
   dataAccessLayer: DataAccessLayer
@@ -60,4 +97,4 @@ export default async function handleBookPost(
   });
 
   response.send({ words, ...book });
-}
+};

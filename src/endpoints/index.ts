@@ -1,6 +1,6 @@
-import handleBookGet from './book/handleBookGet';
-import handleBookPost from './book/handleBookPost';
-import handleWordGet from './word/handleWordGet';
+import { handleBookGet, handleBookPost } from './book';
+import { handleWordGet } from './word';
+import { handleLogin, handleRegister } from './auth';
 import type { Express, Request, Response } from 'express';
 import type DataAccessLayer from '../db/DataAccessLayer';
 
