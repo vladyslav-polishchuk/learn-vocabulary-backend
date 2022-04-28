@@ -3,7 +3,9 @@ import { Database } from 'sqlite3';
 const setupSql = `
   CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT
+    email TEXT,
+    password TEXT,
+    token TEXT
 	);
   CREATE TABLE IF NOT EXISTS words (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -12,6 +12,12 @@ export const endpoints = {
   word: {
     get: handleWordGet,
   },
+  login: {
+    post: handleLogin,
+  },
+  register: {
+    post: handleRegister,
+  },
 };
 
 export default function attachEndpoints(
