@@ -6,14 +6,14 @@ export default function getWordsByFrequency(
   const lowerCaseText = fileText.toLowerCase();
   const allWords = [];
   let currentWord = '';
-  for (let char of lowerCaseText) {
+  for (const char of lowerCaseText) {
     if (alphabeth.has(char)) {
       currentWord += char;
     } else {
       if (
         currentWord.length > 1 &&
         currentWord.length < 15 &&
-        !parseInt(currentWord)
+        !parseInt(currentWord, 10)
       ) {
         allWords.push(currentWord);
       }

@@ -50,8 +50,9 @@ export default function (dataAccessLayer: DataAccessLayer) {
 
     res
       .cookie('access_token', token, {
+        sameSite: 'none',
         httpOnly: true,
-        // secure: process.env.NODE_ENV === 'production',
+        secure: true,
       })
       .status(200)
       .json(updatedUser);
@@ -84,8 +85,9 @@ export default function (dataAccessLayer: DataAccessLayer) {
 
     res
       .cookie('access_token', token, {
+        sameSite: 'none',
         httpOnly: true,
-        // secure: process.env.NODE_ENV === 'production',
+        secure: true,
       })
       .status(201)
       .json(user);

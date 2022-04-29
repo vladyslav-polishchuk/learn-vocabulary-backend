@@ -10,13 +10,13 @@ import { verifyToken } from './auth';
 export default function (dataAccessLayer: DataAccessLayer) {
   const router = express.Router();
 
-  router.get('/book', async function (request: Request, response: Response) {
+  router.get('/book', async (request: Request, response: Response) => {
     const { id, download } = request.query;
 
     if (typeof id !== 'string') {
       const books = await dataAccessLayer.read('books', {
-        //implement books sharing later
-        //shared: true
+        // implement books sharing later
+        // shared: true
       });
       response.send(books);
       return;
@@ -46,7 +46,7 @@ export default function (dataAccessLayer: DataAccessLayer) {
   router.post(
     '/book',
     verifyToken,
-    async function (request: Request, response: Response) {
+    async (request: Request, response: Response) => {
       const bookFile = request.files.book as UploadedFile;
       const words = await getWordsSortedByFrequency(
         bookFile.data,

@@ -8,13 +8,14 @@ import authRoute from './routes/auth';
 import bookRoute from './routes/book';
 import wordRoute from './routes/word';
 
-(async function () {
+(async () => {
   const dataAccessLayer = await getDB();
 
   const app = express();
   app.use(
     cors({
-      origin: 'http://localhost:3000',
+      // origin: 'http://localhost:3000',
+      origin: 'https://bookabulary.azurewebsites.net',
       credentials: true,
     })
   );

@@ -71,8 +71,6 @@ export default class DataAccessLayer {
     return updatedRow;
   }
 
-  async delete(tableName: string) {}
-
   async transaction(callback: () => Promise<unknown>) {
     this.db.run('BEGIN TRANSACTION');
 
