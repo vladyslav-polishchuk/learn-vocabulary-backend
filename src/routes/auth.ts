@@ -13,7 +13,7 @@ export const verifyToken = (
 ) => {
   const token = req.cookies.access_token;
   if (!token) {
-    return res.status(403).send('A token is required for authentication');
+    return res.status(403).send('You have to login to perform this operation');
   }
   try {
     const decoded = jwt.verify(token, secret);
@@ -91,6 +91,10 @@ export default function (dataAccessLayer: DataAccessLayer) {
       })
       .status(201)
       .json(user);
+  });
+
+  router.post('/logout', async (req: Request, res: Response) => {
+    res.clearCookie('access_token').status(200).send({});
   });
 
   return router;
