@@ -5,6 +5,7 @@ import cors from 'cors';
 import fileupload from 'express-fileupload';
 import getDB from './db';
 import authRoute from './routes/auth';
+import userRoute from './routes/user';
 import bookRoute from './routes/book';
 import wordRoute from './routes/word';
 
@@ -32,6 +33,7 @@ import wordRoute from './routes/word';
   );
 
   app.use(authRoute(dataAccessLayer));
+  app.use(userRoute(dataAccessLayer));
   app.use(bookRoute(dataAccessLayer));
   app.use(wordRoute(dataAccessLayer));
 
