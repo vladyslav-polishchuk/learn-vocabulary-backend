@@ -15,8 +15,14 @@ import wordRoute from './routes/word';
   const app = express();
   app.use(
     cors({
-      // origin: 'http://localhost:3000',
-      origin: 'https://bookabulary.azurewebsites.net',
+      origin: (origin, callback) => {
+        const allowOrigin =
+          origin.includes('azurestaticapps') ||
+          origin.includes('azurewebsites') ||
+          origin.includes('localhost');
+
+        callback(null, allowOrigin);
+      },
       credentials: true,
     })
   );
