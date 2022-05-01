@@ -2,7 +2,6 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { Request, Response } from 'express';
-import type DataAccessLayer from '../db/DataAccessLayer';
 
 const secret = 'my-32-character-ultra-secure-and-ultra-long-secret';
 
@@ -24,7 +23,7 @@ export const verifyToken = (
   return next();
 };
 
-export default function (dataAccessLayer: DataAccessLayer) {
+export default function ({ User }: any) {
   const router = express.Router();
 
   router.post('/login', async (req: Request, res: Response) => {
@@ -33,29 +32,26 @@ export default function (dataAccessLayer: DataAccessLayer) {
       return res.status(400).send('Missing username or password');
     }
 
-    const [user] = (await dataAccessLayer.read('users', { email })) as any;
+    const user = (await User.findOne({ email })) as any;
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).send('Invalid Credentials');
     }
 
-    const token = jwt.sign({ user_id: user.id, email }, secret, {
+    user.token = jwt.sign({ user_id: user.id, email }, secret, {
       expiresIn: '2h',
     });
-    const updatedUser = await dataAccessLayer.update('users', {
-      ...user,
-      token,
-    });
+    user.save();
 
-    delete (updatedUser as any)?.password;
+    delete (user as any)?.password;
 
     res
-      .cookie('access_token', token, {
+      .cookie('access_token', user.token, {
         sameSite: 'none',
         httpOnly: true,
         secure: true,
       })
       .status(200)
-      .json(updatedUser);
+      .json(user);
   });
 
   router.post('/register', async (req: Request, res: Response) => {
@@ -64,7 +60,7 @@ export default function (dataAccessLayer: DataAccessLayer) {
       return res.status(400).send('Not all registration data provided');
     }
 
-    const [userFromDb] = await dataAccessLayer.read('users', { email });
+    const userFromDb = await User.findOne({ email });
     if (userFromDb) {
       return res
         .status(409)
@@ -75,11 +71,13 @@ export default function (dataAccessLayer: DataAccessLayer) {
     const token = jwt.sign({ email }, secret, {
       expiresIn: '2h',
     });
-    const user = await dataAccessLayer.create('users', {
+
+    const user = new User({
       password: encryptedPassword,
       email,
       token,
     });
+    user.save();
 
     delete (user as any)?.password;
 

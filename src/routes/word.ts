@@ -1,12 +1,11 @@
 import express from 'express';
-import type DataAccessLayer from '../db/DataAccessLayer';
 import type { Request, Response } from 'express';
 
-export default function (dataAccessLayer: DataAccessLayer) {
+export default function ({ Word }: any) {
   const router = express.Router();
 
   router.get('/word', async (request: Request, response: Response) => {
-    const words = await dataAccessLayer.read('words', {}, { count: 'desc' });
+    const words = await Word.find({}).sort({ count: -1 }).select({ _id: 0 });
 
     response.send(words);
   });

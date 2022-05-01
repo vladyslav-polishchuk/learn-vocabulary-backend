@@ -1,46 +1,25 @@
 import express from 'express';
-import fs from 'fs';
 import getWordsSortedByFrequency from '../logic';
-import type DataAccessLayer from '../db/DataAccessLayer';
+import { verifyToken } from './auth';
 import type { Request, Response } from 'express';
 import type { UploadedFile } from 'express-fileupload';
-import type { DbRecord } from '../db/DataAccessLayer';
-import { verifyToken } from './auth';
 
-export default function (dataAccessLayer: DataAccessLayer) {
+export default function ({ Book, Word }: any) {
   const router = express.Router();
 
   router.get('/book', async (request: Request, response: Response) => {
-    const { id, download } = request.query;
-
+    const { id } = request.query;
     if (typeof id !== 'string') {
-      const books = await dataAccessLayer.read('books', {
-        // implement books sharing later
-        // shared: true
-      });
-      response.send(books);
-      return;
+      const books = await Book.find({}).select({ _id: 0, words: 0, __v: 0 });
+      return response.send(books);
     }
 
-    const [book] = await dataAccessLayer.read('books', {
-      hash: id,
-    });
-    const fileName = `./uploads/${id}/${(book as any)?.name}`;
-
-    if (download) {
-      response.download(fileName);
-      return;
+    const book = await Book.findOne({ hash: id });
+    if (!book) {
+      return response.status(404);
     }
 
-    fs.readFile(fileName, async (err, data) => {
-      if (err) {
-        response.send(err);
-        return;
-      }
-      const words = await getWordsSortedByFrequency(data, fileName);
-
-      response.send({ words, ...book });
-    });
+    response.send(book);
   });
 
   router.post(
@@ -52,54 +31,44 @@ export default function (dataAccessLayer: DataAccessLayer) {
         bookFile.data,
         bookFile.name
       );
-      const bookInDb = await dataAccessLayer.read('books', {
+      const bookInDb = await Book.findOne({
         hash: bookFile.md5,
       });
-      const book = {
-        hash: bookFile.md5,
-        name: bookFile.name,
-        share: false,
-      };
 
-      if (bookInDb.length) {
-        response.send({ words, ...book });
-        return;
+      if (bookInDb) {
+        return response.send(bookInDb);
       }
 
-      const fileDirectory = `./uploads/${bookFile.md5}`;
-      fs.mkdir(fileDirectory, { recursive: true }, async (err) => {
-        if (err) {
-          console.log('File was not saved', err);
-        } else {
-          await bookFile.mv(`${fileDirectory}/${bookFile.name}`);
-        }
+      const newBook = new Book({
+        hash: bookFile.md5,
+        name: bookFile.name,
+        words,
       });
+      newBook.save();
 
-      await dataAccessLayer.create('books', book);
-
-      const wordsFromDb = await dataAccessLayer.read('words');
+      const wordsFromDb = await Word.find({}).select({ _id: 0 });
       const wordKeyByValue = new Map();
-      wordsFromDb.forEach((word) => {
+      wordsFromDb.forEach((word: any) => {
         wordKeyByValue.set(word.value, word);
       });
 
-      await dataAccessLayer.transaction(async () => {
-        for (const word of words) {
-          const wordFromDb = wordKeyByValue.get(word.value);
-          if (!wordFromDb) {
-            await dataAccessLayer.create('words', word as unknown as DbRecord);
-            continue;
-          }
+      Word.bulkWrite(
+        words.map((word) => ({
+          updateOne: {
+            filter: { value: word.value },
+            update: {
+              $set: {
+                ...word,
+                count:
+                  word.count + (wordKeyByValue.get(word.value)?.count ?? 0),
+              },
+            },
+            upsert: true,
+          },
+        }))
+      );
 
-          const count = wordFromDb.count + word.count;
-          await dataAccessLayer.update('words', {
-            ...wordFromDb,
-            count,
-          });
-        }
-      });
-
-      response.send({ words, ...book });
+      response.send(newBook);
     }
   );
 
