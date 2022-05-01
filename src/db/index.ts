@@ -13,6 +13,7 @@ export default async function getDB(): Promise<any> {
     email: { type: String, unique: true, required: true, dropDups: true },
     password: String,
     token: String,
+    language: String,
     learnedWords: [String],
   });
   const bookSchema = new mongoose.Schema({

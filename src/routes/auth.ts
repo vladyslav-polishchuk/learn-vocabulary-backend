@@ -42,8 +42,6 @@ export default function ({ User }: any) {
     });
     user.save();
 
-    delete (user as any)?.password;
-
     res
       .cookie('access_token', user.token, {
         sameSite: 'none',
@@ -55,7 +53,7 @@ export default function ({ User }: any) {
   });
 
   router.post('/register', async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { email, password, language } = req.body;
     if (!(email && password)) {
       return res.status(400).send('Not all registration data provided');
     }
@@ -76,10 +74,9 @@ export default function ({ User }: any) {
       password: encryptedPassword,
       email,
       token,
+      language,
     });
     user.save();
-
-    delete (user as any)?.password;
 
     res
       .cookie('access_token', token, {

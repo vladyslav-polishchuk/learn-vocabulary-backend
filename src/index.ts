@@ -26,6 +26,7 @@ import wordRoute from './routes/word';
       credentials: true,
     })
   );
+  app.use(express.json());
   app.use(cookieParser());
   app.use(
     fileupload({

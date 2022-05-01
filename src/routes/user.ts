@@ -19,5 +19,27 @@ export default function ({ User }: any) {
     }
   );
 
+  router.patch(
+    '/user',
+    verifyToken,
+    async (request: Request & { user: any }, response: Response) => {
+      const userToUpdate = request.body.user;
+
+      if (request.user.email !== userToUpdate.email) {
+        return response.status(403).send('Forbidden to update another user');
+      }
+
+      const updatedUser = await User.findOneAndUpdate(
+        { email: request.user.email },
+        userToUpdate,
+        {
+          new: true,
+        }
+      );
+
+      response.status(200).send(updatedUser);
+    }
+  );
+
   return router;
 }
