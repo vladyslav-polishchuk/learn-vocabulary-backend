@@ -19,6 +19,9 @@ export default function ({ Book, Word }: any) {
       return response.status(404);
     }
 
+    book.views++;
+    book.save();
+
     response.send(book);
   });
 
@@ -42,6 +45,7 @@ export default function ({ Book, Word }: any) {
       const newBook = new Book({
         hash: bookFile.md5,
         name: bookFile.name,
+        views: 0,
         words,
       });
       newBook.save();

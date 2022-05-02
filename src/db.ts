@@ -19,6 +19,7 @@ export default async function getDB(): Promise<any> {
   const bookSchema = new mongoose.Schema({
     hash: { type: String, unique: true, required: true, dropDups: true },
     name: String,
+    views: Number,
     words: [{ value: String, count: Number }],
   });
 
