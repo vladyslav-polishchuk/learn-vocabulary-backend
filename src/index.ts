@@ -3,14 +3,16 @@ import cookieParser from 'cookie-parser';
 import responseTime from 'response-time';
 import cors from 'cors';
 import fileupload from 'express-fileupload';
-import getDB from './db';
-import authRoute from './routes/auth';
-import userRoute from './routes/user';
-import bookRoute from './routes/book';
-import wordRoute from './routes/word';
+import mongoose from 'mongoose';
+import authRouter from './routes/auth';
+import userRouter from './routes/user';
+import bookRouter from './routes/book';
+import wordRouter from './routes/word';
 
 (async () => {
-  const dataAccessLayer = await getDB();
+  await mongoose.connect(
+    'mongodb+srv://learn-vocabulary-backend-demo:password_password@cluster0.gglsz.mongodb.net/bookabulary?retryWrites=true&w=majority'
+  );
 
   const app = express();
   app.use(
@@ -39,10 +41,10 @@ import wordRoute from './routes/word';
     })
   );
 
-  app.use(authRoute(dataAccessLayer));
-  app.use(userRoute(dataAccessLayer));
-  app.use(bookRoute(dataAccessLayer));
-  app.use(wordRoute(dataAccessLayer));
+  app.use(authRouter);
+  app.use(userRouter);
+  app.use(bookRouter);
+  app.use(wordRouter);
 
   app.listen(8080);
 })();

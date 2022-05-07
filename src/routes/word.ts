@@ -1,14 +1,13 @@
 import express from 'express';
 import type { Request, Response } from 'express';
+import { Word } from '../db';
 
-export default function ({ Word }: any) {
-  const router = express.Router();
+const router = express.Router();
 
-  router.get('/word', async (request: Request, response: Response) => {
-    const words = await Word.find({}).sort({ count: -1 }).select({ _id: 0 });
+router.get('/word', async (request: Request, response: Response) => {
+  const words = await Word.find({}).sort({ count: -1 }).select({ _id: 0 });
 
-    response.send(words);
-  });
+  response.send(words);
+});
 
-  return router;
-}
+export default router;
