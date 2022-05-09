@@ -8,6 +8,7 @@ import authRouter from './routes/auth';
 import userRouter from './routes/user';
 import bookRouter from './routes/book';
 import wordRouter from './routes/word';
+import learnedWordsRouter from './routes/learnedWords';
 
 (async () => {
   await mongoose.connect(
@@ -45,6 +46,7 @@ import wordRouter from './routes/word';
   app.use(userRouter);
   app.use(bookRouter);
   app.use(wordRouter);
+  app.use(learnedWordsRouter);
 
   app.listen(8080);
 })();

@@ -15,7 +15,12 @@ const userSchema = new mongoose.Schema({
   password: String,
   token: String,
   language: String,
-  learnedWords: [String],
+  learnedWords: [
+    {
+      type: String,
+      unique: true,
+    },
+  ],
 });
 userSchema.set('toJSON', {
   transform: (doc, ret) => {
