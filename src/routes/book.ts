@@ -1,34 +1,36 @@
 import express from 'express';
 import getWordsSortedByFrequency from '../logic';
 import { verifyToken } from './auth';
-import type { Request, Response } from 'express';
 import type { UploadedFile } from 'express-fileupload';
 import { Book, Word } from '../db';
 
 const router = express.Router();
 
-router.get('/book', async (request: Request, response: Response) => {
-  const { id } = request.query;
-  if (typeof id !== 'string') {
+router.get(
+  '/book',
+  async (request: ExpressRequest, response: ExpressResponse) => {
+    const { id } = request.query;
+    if (typeof id !== 'string') {
       const books = await Book.find().select({ words: 0, __v: 0 });
-    return response.send(books);
+      return response.send(books);
+    }
+
+    const book = await Book.findOne({ hash: id });
+    if (!book) {
+      return response.status(404);
+    }
+
+    book.views++;
+    book.save();
+
+    response.send(book);
   }
-
-  const book = await Book.findOne({ hash: id });
-  if (!book) {
-    return response.status(404);
-  }
-
-  book.views++;
-  book.save();
-
-  response.send(book);
-});
+);
 
 router.post(
   '/book',
   verifyToken,
-  async (request: Request, response: Response) => {
+  async (request: ExpressRequest, response: ExpressResponse) => {
     const bookFile = request.files.book as UploadedFile;
     const words = await getWordsSortedByFrequency(bookFile.data, bookFile.name);
     const bookInDb = await Book.findOne({

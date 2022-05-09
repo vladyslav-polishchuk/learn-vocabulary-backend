@@ -1,6 +1,5 @@
 import express from 'express';
 import { verifyToken } from './auth';
-import type { Request, Response } from 'express';
 import { User } from '../db';
 
 const router = express.Router();
@@ -8,7 +7,7 @@ const router = express.Router();
 router.get(
   '/user/current',
   verifyToken,
-  async (request: Request & { user: any }, response: Response) => {
+  async (request: AuthorizedExpressRequest, response: ExpressResponse) => {
     const user = await User.findOne(request.user).select({
       _id: 0,
       password: 0,
@@ -22,7 +21,7 @@ router.get(
 router.patch(
   '/user',
   verifyToken,
-  async (request: Request & { user: any }, response: Response) => {
+  async (request: AuthorizedExpressRequest, response: ExpressResponse) => {
     const userToUpdate = request.body.user;
 
     if (request.user.email !== userToUpdate.email) {

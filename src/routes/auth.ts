@@ -1,14 +1,13 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import type { Request, Response } from 'express';
 import { User } from '../db';
 
 const secret = 'my-32-character-ultra-secure-and-ultra-long-secret';
 
 export const verifyToken = (
-  req: Request & { user: any },
-  res: Response,
+  req: AuthorizedExpressRequest,
+  res: ExpressResponse,
   next: any
 ) => {
   const token = req.cookies.access_token;
@@ -17,7 +16,7 @@ export const verifyToken = (
   }
   try {
     const decoded = jwt.verify(token, secret);
-    req.user = decoded;
+    req.user = decoded as User;
   } catch (err) {
     return res.status(401).send('Invalid Token');
   }
@@ -26,7 +25,7 @@ export const verifyToken = (
 
 const router = express.Router();
 
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', async (req: ExpressRequest, res: ExpressResponse) => {
   const { email, password } = req.body;
   if (!(email && password)) {
     return res.status(400).send('Missing username or password');
@@ -52,7 +51,7 @@ router.post('/login', async (req: Request, res: Response) => {
     .json(user);
 });
 
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', async (req: ExpressRequest, res: ExpressResponse) => {
   const { email, password, language } = req.body;
   if (!(email && password)) {
     return res.status(400).send('Not all registration data provided');
@@ -86,7 +85,7 @@ router.post('/register', async (req: Request, res: Response) => {
     .json(user);
 });
 
-router.post('/logout', async (req: Request, res: Response) => {
+router.post('/logout', async (req: ExpressRequest, res: ExpressResponse) => {
   res.clearCookie('access_token').status(200).send({});
 });
 
