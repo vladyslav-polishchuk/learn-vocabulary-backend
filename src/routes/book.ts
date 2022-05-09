@@ -10,7 +10,7 @@ const router = express.Router();
 router.get('/book', async (request: Request, response: Response) => {
   const { id } = request.query;
   if (typeof id !== 'string') {
-    const books = await Book.find({}).select({ _id: 0, words: 0, __v: 0 });
+      const books = await Book.find().select({ words: 0, __v: 0 });
     return response.send(books);
   }
 

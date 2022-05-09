@@ -32,7 +32,7 @@ router.post('/login', async (req: Request, res: Response) => {
     return res.status(400).send('Missing username or password');
   }
 
-  const user = (await User.findOne({ email })) as any;
+  const user = await User.findOne({ email }).select({ __v: 0 });
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return res.status(400).send('Invalid Credentials');
   }
@@ -58,7 +58,7 @@ router.post('/register', async (req: Request, res: Response) => {
     return res.status(400).send('Not all registration data provided');
   }
 
-  const userFromDb = await User.findOne({ email });
+  const userFromDb = await User.findOne({ email }).select({ __v: 0 });
   if (userFromDb) {
     return res.status(409).send(`User with login name ${email} already exists`);
   }
